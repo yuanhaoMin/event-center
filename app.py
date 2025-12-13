@@ -5,6 +5,7 @@ import streamlit as st
 
 from db import (
     count_by_source,
+    delete_all_events,
     get_conn,
     init_db,
     insert_events_ignore_duplicates,
@@ -222,10 +223,59 @@ def page_browse():
             st.json(meta)
 
 
+def page_admin():
+    st.title("Administration / Gefährliche Aktionen")
+
+    conn = _db()
+
+    st.warning(
+        "⚠️ Diese Aktion ist **nicht rückgängig** zu machen. Alle Events werden dauerhaft gelöscht."
+    )
+
+    stats = count_by_source(conn)
+    total = sum(int(r["cnt"]) for r in stats) if stats else 0
+    st.write(f"Aktuelle Anzahl Events in der Datenbank: **{total}**")
+
+    st.divider()
+
+    st.subheader("Alle Events löschen")
+
+    confirm_text = st.text_input(
+        "Bitte gib exakt **DELETE ALL** ein, um das Löschen zu bestätigen (Groß-/Kleinschreibung beachten):",
+        value="",
+        key="confirm_delete_all",
+    )
+
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        do_vacuum = st.checkbox(
+            "Zusätzlich VACUUM ausführen (Speicher freigeben)", value=True
+        )
+
+    with col2:
+        st.caption(
+            "Hinweis: VACUUM kann je nach DB-Größe etwas dauern, reduziert aber die Dateigröße der SQLite-Datenbank."
+        )
+
+    disabled = confirm_text != "DELETE ALL"
+    if st.button("🧨 Events-Datenbank leeren", type="primary", disabled=disabled):
+        with st.status("Lösche Daten ...", expanded=False) as status:
+            res = delete_all_events(conn, vacuum=do_vacuum)
+            status.update(
+                label=f"Fertig: {res['deleted']} Datensätze gelöscht.",
+                state="complete",
+            )
+        st.success(
+            "Die Events wurden gelöscht. Du kannst jetzt unter „Import“ neue Daten importieren."
+        )
+
+
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Seite auswählen", ["Import", "Anzeige"])
+page = st.sidebar.radio("Seite auswählen", ["Import", "Anzeige", "Administration"])
 
 if page == "Import":
     page_ingest()
-else:
+elif page == "Anzeige":
     page_browse()
+else:
+    page_admin()

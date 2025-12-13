@@ -148,3 +148,18 @@ def count_by_source(conn: sqlite3.Connection) -> List[sqlite3.Row]:
             "SELECT source, COUNT(*) AS cnt FROM events GROUP BY source ORDER BY cnt DESC"
         ).fetchall()
     )
+
+
+def delete_all_events(conn: sqlite3.Connection, vacuum: bool = True) -> Dict[str, int]:
+    cur = conn.execute("SELECT COUNT(*) AS cnt FROM events;")
+    before = int(cur.fetchone()["cnt"])
+
+    conn.execute("DELETE FROM events;")
+    conn.execute("DELETE FROM sqlite_sequence WHERE name='events';")
+    conn.commit()
+
+    if vacuum:
+        conn.execute("VACUUM;")
+        conn.commit()
+
+    return {"deleted": before}
