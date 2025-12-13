@@ -60,7 +60,7 @@ def fmt_dt(value: str | None) -> str:
 
 
 def page_ingest():
-    st.title("Seite 1: Events → SQLite importieren (mit Deduplizierung)")
+    st.title("Events importieren")
 
     conn = _db()
 
@@ -158,7 +158,7 @@ def page_ingest():
 
 
 def page_browse():
-    st.title("Seite 2: Events anzeigen")
+    st.title("Events anzeigen")
 
     conn = _db()
 
@@ -212,7 +212,7 @@ def page_browse():
                     st.write(r["description"])
             with right:
                 if r["image_url"]:
-                    st.image(r["image_url"], use_container_width=True)
+                    st.image(r["image_url"], width=True)
                 tags = json.loads(r["tags_json"] or "[]")
                 if tags:
                     st.write("**Tags:**", ", ".join(tags))
