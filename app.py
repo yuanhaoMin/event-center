@@ -213,7 +213,7 @@ def page_browse():
                     st.write(r["description"])
             with right:
                 if r["image_url"]:
-                    st.image(r["image_url"], width=True)
+                    st.image(r["image_url"], width="stretch")
                 tags = json.loads(r["tags_json"] or "[]")
                 if tags:
                     st.write("**Tags:**", ", ".join(tags))
